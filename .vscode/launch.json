@@ -1,0 +1,84 @@
+{
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "settingsFile",
+            "type": "promptString",
+            "default": "test/resources/settings.json",
+            "description": "Relative path to the settings file"
+        },
+        {
+            "id": "testNamePattern",
+            "type": "promptString",
+            "default": "*",
+            "description": "Regex to match tests to be run"
+        }
+    ],
+    "configurations": [
+        {
+            "name": "npm debug tests",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run-script",
+                "test:debug",
+                "--",
+                "-t",
+                "${input:testNamePattern}"
+            ],
+            "port": 9229,
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "acme pull",
+            "program": "${workspaceFolder}/index.js",
+            "skipFiles": ["<node_internals>/**"],
+            "args": ["pull", "--config", "${input:settingsFile}"],
+            "env": {
+                "DEBUG": "acme:*"
+            },
+            "preLaunchTask": "clean",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "acme create",
+            "program": "${workspaceFolder}/index.js",
+            "skipFiles": ["<node_internals>/**"],
+            "args": ["create"],
+            "env": {
+                "DEBUG": "acme*"
+            },
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "acme create with config",
+            "program": "${workspaceFolder}/index.js",
+            "skipFiles": ["<node_internals>/**"],
+            "args": ["create", "--config", "test/resources/settings.json"],
+            "env": {
+                "DEBUG": "acme:*"
+            },
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "acme create with config",
+            "program": "${workspaceFolder}/index.js",
+            "skipFiles": ["<node_internals>/**"],
+            "args": ["create", "--config", "test/resources/settings.json"],
+            "env": {
+                "DEBUG": "acme:*"
+            },
+            "console": "integratedTerminal"
+        }
+    ]
+}
