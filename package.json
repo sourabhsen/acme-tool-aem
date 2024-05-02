@@ -14,6 +14,7 @@
         "test:debug": "node --nolazy --inspect-brk=9229 node_modules/.bin/jest --runInBand",
         "lint:fix": "eslint *.js --fix",
         "lint": "eslint *.js",
+        "release": "auto shipit",
         "prettify": "prettier *.js --write"
     },
     "keywords": [
@@ -28,6 +29,7 @@
     },
     "dependencies": {
         "app-module-path": "^2.2.0",
+        "auto": "^11.1.6",
         "chalk": "^4.0.0",
         "change-case": "^4.1.1",
         "cheerio": "^1.0.0-rc.3",
