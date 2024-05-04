@@ -8,7 +8,7 @@ skip_if: "name: '<%= storyName %>'"
     const path = funcName + '_TemplatePath'
 %>
 // Start of story
-import <%= path %> from '../storybook-assets<%= templatePath %>';
+import <%= path %> from '../<%= templatePath %>';
 
 export const <%= storyName.split(' ').join('') %> = () => `${<%= path %>}`
 
@@ -22,12 +22,3 @@ export const <%= storyName.split(' ').join('') %> = () => `${<%= path %>}`
 };
 
 // End of story
-
-window.addEventListener('message', (detail) => {
-  const detailsObj = detail?.data || {};
-  const eventType = JSON.parse(detailsObj).event?.type; // Get the new value from the event
-  const val = JSON.parse(detailsObj).event;
-  if(eventType === 'storybook/style-system/change') {
-    console.log('sourabh-qq-', val.args[0].selectedStyle);
-  }
-});

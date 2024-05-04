@@ -28,7 +28,7 @@ const getData = async (creds, baseUrl, path) => {
         })
         // Multiple Choices
         if (response.status === 300) {
-            const choices = await getJson(response);
+            const choices = await getJson(response)
             return getData(creds, baseUrl, choices.shift())
         }
         if (!response.ok) {
@@ -36,7 +36,7 @@ const getData = async (creds, baseUrl, path) => {
         }
         return response
     } catch (error) {
-        console.log(`Error accessing`, error) 
+        console.log('Error accessing', error)
         console.log(`Error accessing "${url}"`)
         throw new Error(error)
     }
@@ -66,7 +66,7 @@ const writeToFile = async (res, filePath) => {
 
 // }
 
-const getResourcePaths = (html) => {
+const getResourcePaths = (html, aemBaseURL) => {
     const $ = cheerio.load(html)
     const resourceTypes = [
         {
@@ -102,20 +102,28 @@ const getPointers = (json, path) => {
 
 const getTitles = (json, resourceType, containerPath, count) => {
     // e.g. /jcr:content/root/container/container
+    console.log('resourceType', resourceType)
+    console.log('containerPath', containerPath)
+    console.log('count', count)
+    // console.log('json', json)
     const path = containerPath
         .split('/')
         .map((item) => {
             return item.includes(':') ? `'${item}'` : item
         })
         .join('.')
+    console.log('path---', path)
     const query = `$.${path}[?(@['sling:resourceType'] === '${resourceType}' )].'jcr:title'`
+    console.log('query', query)
     const result = JSONPath({
         path: query,
         json: json,
         resultType: 'value',
         wrap: false
     })
-    return result && result.slice(-count)
+    console.log('result', result)
+    // eslint-disable-next-line no-mixed-operators
+    return result && result.slice(-count) || 'title'
 }
 
 const getComponentPaths = (json, containerType) => {

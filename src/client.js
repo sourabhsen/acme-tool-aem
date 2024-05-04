@@ -5,7 +5,7 @@ const mkdirp = require('mkdirp')
 const log = require('debug')('acme:Pull content')
 const chalk = require('chalk')
 
-let getData, containerPath, containerType, assetsDir, titleResourceType
+let getData, containerPath, containerType, assetsDir, titleResourceType, aemBaseURL
 
 const init = (config) => {
     getData = core.getData.bind(null, config.credentials, config.baseURL)
@@ -13,6 +13,7 @@ const init = (config) => {
     containerType = config.containerType
     assetsDir = config.assetsDir
     titleResourceType = config.titleResourceType
+    aemBaseURL = config.baseURL
 }
 
 const getComponentPages = async (contentPath) => {
@@ -44,24 +45,27 @@ const getRenderedComponent = async (
             utils.writeToFile(filepath, utils.tidy(html))
         })
         .catch((error) => {
-            throw new Error(error)
+            console.log('error', error)
+            // throw new Error(error)
         })
 }
 
-const getRenderedComponents = async (json, pageUrl) => {
-    // console.log(json)
+const getRenderedComponents = async (json, pageUrl, previousFolderName) => {
+    console.log('json', json)
     const component = pageUrl.split('/').pop()
     const componentLogMsg = chalk.green.bold(component)
     log(`Retrieving states from ${componentLogMsg} component page`)
-    const componentDir = path.join(assetsDir, 'components', component)
+    const componentDir = path.join(assetsDir, `components/${previousFolderName}`, component)
     const componentPaths = core.getComponentPaths(json, containerType)
+    console.log('componentDir', componentDir)
+    console.log('componentPaths', componentPaths)
     const titles = core.getTitles(
         json,
         titleResourceType,
         containerPath,
         componentPaths.length
     )
-
+    console.log('titles', titles)
     mkdirp.sync(componentDir)
     const result = []
     for (const [ind, componentPath] of componentPaths.entries()) {
@@ -79,9 +83,38 @@ const getRenderedComponents = async (json, pageUrl) => {
     return result
 }
 
-const getAllComponents = async (contentPath) => {
+const getParentComponents = async (contentPath) => {
+    console.log('contentPath', contentPath)
     return getComponentPages(contentPath).then((pagePaths) => {
-        
+        console.log('pagePaths-1', pagePaths)
+        const result = pagePaths.map((pagePath) => {
+            const fullPagePath = contentPath + pagePath
+            return getComponentPages(fullPagePath).then((pagePaths) => {
+                console.log('pagePaths--2', pagePaths)
+                const innerresult = pagePaths.map((pagePath) => {
+                    const pagePathList = fullPagePath + pagePath
+                    console.log('pagePathList', pagePathList)
+                    const urlParts = pagePathList.split('/')
+                    // Get the second-to-last part
+                    const previousFolderName = urlParts[urlParts.length - 2]
+                    const camelCaseFolderName = previousFolderName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
+                    const components = getData(utils.getJsonPath(pagePathList))
+                        .then(core.getJson)
+                        .then((json) => getRenderedComponents(json, pagePathList, camelCaseFolderName))
+
+                    return components
+                })
+                return Promise.all(innerresult)
+            })
+        })
+        return Promise.all(result)
+    })
+}
+
+const getAllComponents = async (contentPath) => {
+    console.log('contentPath', contentPath)
+    return getComponentPages(contentPath).then((pagePaths) => {
+        console.log('pagePaths', pagePaths)
         const result = pagePaths.map((pagePath) => {
             const fullPagePath = contentPath + pagePath
             const components = getData(utils.getJsonPath(fullPagePath))
@@ -94,7 +127,7 @@ const getAllComponents = async (contentPath) => {
 }
 
 const getContent = async (html) => {
-    const resourcePaths = core.getResourcePaths(html)
+    const resourcePaths = core.getResourcePaths(html, aemBaseURL)
 
     const resources = resourcePaths
         .filter((p) => {
@@ -185,6 +218,30 @@ const getResources = async (contentPath) => {
         })
 }
 
+const getResourcesImage = async (contentPath) => {
+    return getData(utils.getHtmlPath(contentPath))
+        .then(core.getHtml)
+        .then((html) => {
+            // Find all image tags in the HTML content
+            const imageTags = html.match(/<img[^>]+>/g) || []
+
+            // Iterate over each image tag and update the src attribute
+            const updatedHtml = imageTags.reduce((updatedContent, imageTag) => {
+                // Append "http://localhost:4502/" before the src path
+                const updatedImageTag = imageTag.replace(/src="([^"]+)"/, 'src="http://localhost:4502/$1"')
+                // Replace the original image tag with the updated one in the HTML content
+                return updatedContent.replace(imageTag, updatedImageTag)
+            }, html)
+
+            const targetPath = path.join(assetsDir, 'resources')
+            mkdirp.sync(targetPath)
+
+            // Write the updated HTML content to a file
+            const filepath = path.join(targetPath, 'updated.html')
+            return core.writeToFile(updatedHtml, filepath)
+        })
+}
+
 const getPolicy = async (policyPath, policiesDir) => {
     const component = path.basename(policyPath)
     log(`Retrieving policy for ${chalk.green.bold(component)} component`)
@@ -199,11 +256,10 @@ const getPolicy = async (policyPath, policiesDir) => {
 }
 
 const getPolicies = async (policiesUrl) => {
-    console.log('policiesUrl', policiesUrl);
+    console.log('policiesUrl', policiesUrl)
     return getData(utils.getJsonPath(policiesUrl))
         .then(core.getJson)
         .then((json) => {
-            console.log('json', json);
             const policyPaths = core.getPolicyPaths(json)
             const policiesDir = path.join(assetsDir, 'policies')
             mkdirp.sync(policiesDir)
@@ -215,7 +271,9 @@ const getPolicies = async (policiesUrl) => {
         })
 }
 
+exports.getResourcesImage = getResourcesImage
 exports.getAllComponents = getAllComponents
+exports.getParentComponents = getParentComponents
 exports.getResources = getResources
 exports.getPolicies = getPolicies
 exports.init = init

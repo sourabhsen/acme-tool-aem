@@ -20,10 +20,12 @@ export default {
   }
 };
 
-/**
- *
- * 1. Duplicate any example below to create a story for the specific use case
- * 2. Update the export function name as well as 'name' property
- * 3. Add the appropriate class to the 'cssClasses' array
- *
- */
+
+window.addEventListener('message', (detail) => {
+  const detailsObj = detail?.data || {};
+  const eventType = JSON.parse(detailsObj).event?.type;
+  const val = JSON.parse(detailsObj).event;
+  if(eventType === 'storybook/style-system/change') {
+    console.log('sourabh-qq-', val.args[0].selectedStyle);
+  }
+}); 

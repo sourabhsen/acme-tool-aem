@@ -26,10 +26,9 @@ module.exports = {
             containerType: argv.componentsContainerType,
             titleResourceType: argv.titleResourceType,
             assetsDir: argv.destination
-        });
+        })
 
-       
-        await client.getAllComponents(argv.componentsContentPath)
+        await client.getParentComponents(argv.componentsContentPath)
         await client.getPolicies(argv.policyPath)
         await client.getResources(argv.homePage)
     }

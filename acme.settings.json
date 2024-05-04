@@ -1,0 +1,11 @@
+{
+    "username": "admin",
+    "password": "admin",
+    "baseURL": "http://localhost:4502",
+    "homePage": "/content/mysite/us/en",
+    "policyPath": "/conf/core-components-examples/settings/wcm/policies/core-components-examples/components",
+    "componentsContentPath": "/content/core-components-examples/library",
+    "pageContentContainerPath": "/jcr:content/root/responsivegrid",
+    "componentsContainerType": "core-components-examples/components/demo/component",
+    "titleResourceType": "core-components-examples/components/title"
+}

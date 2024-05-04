@@ -24,9 +24,9 @@ const readdir = async (path) => {
 }
 
 const addStory = async (componentsPath, componentName, logMsg) => {
-    const componentsRelPath = path.join(path.sep, 'components')
     const templatesPath = path.join(componentsPath, componentName)
-    const templatesRelPath = path.join(componentsRelPath, componentName)
+    console.log('templatesPath', templatesPath)
+
     const templates = await readdir(templatesPath)
     let num = 1
     for (const template of templates) {
@@ -38,7 +38,7 @@ const addStory = async (componentsPath, componentName, logMsg) => {
         await generator.run('story', componentName, {
             funcName: 'Example_' + num++,
             storyName: storyName,
-            templatePath: path.join(templatesRelPath, template.name)
+            templatePath: path.join(templatesPath, template.name)
         })
     }
 }
@@ -49,20 +49,25 @@ const createStories = async (assetsPath) => {
     const policiesRelPath = path.join(path.sep, 'policies')
     const components = await readdir(componentsPath)
 
-    const generatedFiles = components
-        .filter((component) => component.isDirectory())
-        .map((component) => {
-            const logMsg = chalk.green.bold(component.name)
-            log(`Found ${logMsg} component... creating stories file`)
-            // Create stories file
-            return generator
-                .run('stories', component.name, {
-                    policiesPath: policiesRelPath
-                })
-                .then(() => addStory(componentsPath, component.name, logMsg))
-        })
-  
-    return Promise.all(generatedFiles)
+    return components.forEach(async (component) => {
+        const fullcomponentpath = component.parentPath + '/' + component.name
+        console.log(fullcomponentpath)
+        const innercomponents = await readdir(fullcomponentpath)
+
+        const generatedFiles = innercomponents
+            .filter((component) => component.isDirectory())
+            .map((component) => {
+                const logMsg = chalk.green.bold(component.name)
+                log(`Found ${logMsg} component... creating stories file`)
+                // Create stories file
+                return generator
+                    .run('stories', component.name, {
+                        policiesPath: policiesRelPath
+                    })
+                    .then(() => addStory(fullcomponentpath, component.name, logMsg))
+            })
+        return Promise.all(generatedFiles)
+    })
 }
 
 const generatePreviewJS = async (assetsPath) => {
