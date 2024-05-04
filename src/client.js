@@ -41,8 +41,27 @@ const getRenderedComponent = async (
                 ext: '.html'
             })
             const html = await core.getHtml(response)
+            const imageTags = html.match(/<img[^>]+>/g) || []
+            const linkTags = html.match(/<link[^>]+>/g) || []
+
+            // Iterate over each image tag and update the src attribute
+            const updatedHtml = imageTags.reduce((updatedContent, imageTag) => {
+                // Append "http://localhost:4502/" before the src path
+                const updatedImageTag = imageTag.replace(/src="([^"]+)"/, `src=${aemBaseURL}$1`)
+                // Replace the original image tag with the updated one in the HTML content
+                return updatedContent.replace(imageTag, updatedImageTag)
+            }, html)
+
+            // Iterate over each image tag and update the src attribute
+            const updatedLinkHtml = linkTags.reduce((updatedContent, linkTag) => {
+                // Append "http://localhost:4502/" before the src path
+                const updatedLinkTag = linkTag.replace(/href="([^"]+)"/, `href=${aemBaseURL}$1`)
+                // Replace the original image tag with the updated one in the HTML content
+                return updatedContent.replace(linkTag, updatedLinkTag)
+            }, updatedHtml)
+
             getContent(html)
-            utils.writeToFile(filepath, utils.tidy(html))
+            utils.writeToFile(filepath, utils.tidy(updatedLinkHtml))
         })
         .catch((error) => {
             console.log('error', error)

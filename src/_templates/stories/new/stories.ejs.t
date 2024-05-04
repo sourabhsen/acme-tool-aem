@@ -8,7 +8,7 @@ import { acmeFetch, getArtboardUrl } from '@hoodoo/acme';
 import <%=name%>Policy from '../storybook-assets<%= policiesPath%>/<%= name %>.json'
 
 export default {
-  title: '<%= Name %>',
+  title: '<%- folderName %>/<%= Name %>',
    tags: ['autodocs'],
   decorators: [
 

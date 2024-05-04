@@ -51,7 +51,8 @@ const createStories = async (assetsPath) => {
 
     return components.forEach(async (component) => {
         const fullcomponentpath = component.parentPath + '/' + component.name
-        console.log(fullcomponentpath)
+        const parentFolderName = component.name
+        console.log('fullcomponentpath', fullcomponentpath)
         const innercomponents = await readdir(fullcomponentpath)
 
         const generatedFiles = innercomponents
@@ -62,7 +63,9 @@ const createStories = async (assetsPath) => {
                 // Create stories file
                 return generator
                     .run('stories', component.name, {
-                        policiesPath: policiesRelPath
+                        policiesPath: policiesRelPath,
+                        folderName: parentFolderName
+
                     })
                     .then(() => addStory(fullcomponentpath, component.name, logMsg))
             })
