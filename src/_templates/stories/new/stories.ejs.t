@@ -2,7 +2,7 @@
 to: stories/<%- folderName %>/<%= name %>.stories.js
 unless_exists: true
 ---
-import <%=name%>Policy from '../storybook-assets<%= policiesPath%>/<%= name %>.json'
+import <%=name%>Policy from '../../storybook-assets<%= policiesPath%>/<%= name %>.json'
 
 export default {
   title: '<%- folderName %>/<%= Name %>',

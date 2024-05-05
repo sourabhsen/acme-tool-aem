@@ -25,8 +25,7 @@ module.exports = {
     handler: async (argv) => {
         const start = process.hrtime()
         Promise.all([
-            createStories(argv.source).catch(errorHandler),
-            generatePreviewJS(argv.source).catch(errorHandler)
+            createStories(argv.source).catch(errorHandler)
         ])
             .then(() => {
                 return xd
