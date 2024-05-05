@@ -1,10 +1,7 @@
 ---
-to: stories/<%= name %>.stories.js
+to: stories/<%- folderName %>/<%= name %>.stories.js
 unless_exists: true
 ---
-import { StyleSystem } from 'storybook-aem-style-system';
-import { aemMetadata } from '@storybook/aem';
-import { acmeFetch, getArtboardUrl } from '@hoodoo/acme';
 import <%=name%>Policy from '../storybook-assets<%= policiesPath%>/<%= name %>.json'
 
 export default {

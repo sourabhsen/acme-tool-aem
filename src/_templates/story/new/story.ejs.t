@@ -1,6 +1,6 @@
 ---
 inject: true
-to: stories/<%=name%>.stories.js
+to: stories/<%- folderName %>/<%=name%>.stories.js
 append: true
 skip_if: "name: '<%= storyName %>'"
 ---
@@ -8,7 +8,7 @@ skip_if: "name: '<%= storyName %>'"
     const path = funcName + '_TemplatePath'
 %>
 // Start of story
-import <%= path %> from '../<%= templatePath %>';
+import <%= path %> from '../../<%= templatePath %>';
 
 export const <%= storyName.split(' ').join('') %> = () => `${<%= path %>}`
 

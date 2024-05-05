@@ -23,7 +23,7 @@ const readdir = async (path) => {
         .catch(errorHandler)
 }
 
-const addStory = async (componentsPath, componentName, logMsg) => {
+const addStory = async (componentsPath, componentName, logMsg, parentFolderName) => {
     const templatesPath = path.join(componentsPath, componentName)
     console.log('templatesPath', templatesPath)
 
@@ -35,10 +35,13 @@ const addStory = async (componentsPath, componentName, logMsg) => {
         const storyName = titleCase(humanize(templateName))
         const templateLogMsg = chalk.yellow.bold(storyName)
         log(`Adding ${templateLogMsg} story for ${logMsg} component`)
+        console.log(`Adding ${templateLogMsg} story for ${logMsg} component`)
+
         await generator.run('story', componentName, {
             funcName: 'Example_' + num++,
             storyName: storyName,
-            templatePath: path.join(templatesPath, template.name)
+            templatePath: path.join(templatesPath, template.name),
+            folderName: parentFolderName
         })
     }
 }
@@ -60,14 +63,14 @@ const createStories = async (assetsPath) => {
             .map((component) => {
                 const logMsg = chalk.green.bold(component.name)
                 log(`Found ${logMsg} component... creating stories file`)
+
                 // Create stories file
                 return generator
                     .run('stories', component.name, {
                         policiesPath: policiesRelPath,
                         folderName: parentFolderName
-
                     })
-                    .then(() => addStory(fullcomponentpath, component.name, logMsg))
+                    .then(() => addStory(fullcomponentpath, component.name, logMsg, parentFolderName))
             })
         return Promise.all(generatedFiles)
     })
