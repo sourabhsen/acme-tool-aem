@@ -10,10 +10,12 @@ export default {
   title: '<%= folderName %>/<%= Name %>',
   tags: ['autodocs'],
   decorators: [],
-  parameters: { <% if (policyExists === 'true') { %>
-    myAddonParameter: {
-      policy: <%= name %>Policy
-    } <% } %>
+  parameters: { 
+    myAddonParameter: {<% if (policyExists === 'true') { %>
+      policy: <%= name %>Policy <% } else { %>
+      policy: []
+      <% } %>
+    } 
   }
 };
 
