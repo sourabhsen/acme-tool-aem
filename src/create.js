@@ -25,7 +25,6 @@ const readdir = async (path) => {
 
 const addStory = async (componentsPath, componentName, logMsg, parentFolderName) => {
     const templatesPath = path.join(componentsPath, componentName)
-    console.log('templatesPath', templatesPath)
 
     const templates = await readdir(templatesPath)
     let num = 1
@@ -35,7 +34,6 @@ const addStory = async (componentsPath, componentName, logMsg, parentFolderName)
         const storyName = titleCase(humanize(templateName))
         const templateLogMsg = chalk.yellow.bold(storyName)
         log(`Adding ${templateLogMsg} story for ${logMsg} component`)
-        console.log(`Adding ${templateLogMsg} story for ${logMsg} component`)
 
         await generator.run('story', componentName, {
             funcName: 'Example_' + num++,
@@ -50,12 +48,12 @@ const createStories = async (assetsPath) => {
     const componentsPath = path.join(assetsPath, 'components')
     // Path relative to assetsPath
     const policiesRelPath = path.join(path.sep, 'policies')
+    const policiesRel = path.join(assetsPath, 'policies')
     const components = await readdir(componentsPath)
 
     return components.forEach(async (component) => {
         const fullcomponentpath = component.parentPath + '/' + component.name
         const parentFolderName = component.name
-        console.log('fullcomponentpath', fullcomponentpath)
         const innercomponents = await readdir(fullcomponentpath)
 
         const generatedFiles = innercomponents
@@ -63,12 +61,17 @@ const createStories = async (assetsPath) => {
             .map((component) => {
                 const logMsg = chalk.green.bold(component.name)
                 log(`Found ${logMsg} component... creating stories file`)
+                const policyPath = policiesRel + '/' + component.name + '.json';
+                const policyExists = fs.existsSync(policyPath);
+
+                console.log('component-name--',component.name,' --policyExists', policyExists);
 
                 // Create stories file
                 return generator
                     .run('stories', component.name, {
                         policiesPath: policiesRelPath,
-                        folderName: parentFolderName
+                        folderName: parentFolderName,
+                        policyExists: policyExists + '',
                     })
                     .then(() => addStory(fullcomponentpath, component.name, logMsg, parentFolderName))
             })
