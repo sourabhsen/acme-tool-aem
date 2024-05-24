@@ -11,6 +11,18 @@ module.exports = {
                 type: 'string',
                 default: 'aem-assets'
             })
+            .option('folder', {
+                alias: 'f',
+                describe: 'folder directory',
+                type: 'string',
+                default: ''
+            })
+            .option('component', {
+                alias: 'c',
+                describe: 'component  names',
+                type: 'string',
+                default: ''
+            })
             .config()
             .demandOption('config')
     },
@@ -25,10 +37,18 @@ module.exports = {
             containerPath: argv.pageContentContainerPath,
             containerType: argv.componentsContainerType,
             titleResourceType: argv.titleResourceType,
-            assetsDir: argv.destination
+            assetsDir: argv.destination,
+            folderName: argv.folder,
+            componentName: argv.component
         })
 
-        await client.getParentComponents(argv.componentsContentPath)
+        if (argv.folder) {
+            await client.getAllComponentsFromFolderPath(argv.componentsContentPath)
+        } else if (argv.component) {
+            await client.getComponentsFromComponentPath(argv.componentsContentPath)
+        } else {
+            await client.getParentComponents(argv.componentsContentPath)
+        }
         await client.getPolicies(argv.policyPath)
         await client.getResources(argv.homePage)
     }

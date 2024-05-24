@@ -5,7 +5,7 @@ const mkdirp = require('mkdirp')
 const log = require('debug')('acme:Pull content')
 const chalk = require('chalk')
 
-let getData, containerPath, containerType, assetsDir, titleResourceType, aemBaseURL
+let getData, containerPath, containerType, assetsDir, titleResourceType, aemBaseURL, aemFolderName, aemComponentName
 
 const init = (config) => {
     getData = core.getData.bind(null, config.credentials, config.baseURL)
@@ -14,6 +14,8 @@ const init = (config) => {
     assetsDir = config.assetsDir
     titleResourceType = config.titleResourceType
     aemBaseURL = config.baseURL
+    aemFolderName = config.folderName
+    aemComponentName = config.componentName
 }
 
 const getComponentPages = async (contentPath) => {
@@ -70,21 +72,21 @@ const getRenderedComponent = async (
 }
 
 const getRenderedComponents = async (json, pageUrl, previousFolderName) => {
-    console.log('json', json)
+    // console.log('json', json)
     const component = pageUrl.split('/').pop()
     const componentLogMsg = chalk.green.bold(component)
     log(`Retrieving states from ${componentLogMsg} component page`)
     const componentDir = path.join(assetsDir, `components/${previousFolderName}`, component)
     const componentPaths = core.getComponentPaths(json, containerType)
-    console.log('componentDir', componentDir)
-    console.log('componentPaths', componentPaths)
+    // console.log('componentDir', componentDir)
+    // console.log('componentPaths', componentPaths)
     const titles = core.getTitles(
         json,
         titleResourceType,
         containerPath,
         componentPaths.length
     )
-    console.log('titles', titles)
+    // console.log('titles', titles)
     mkdirp.sync(componentDir)
     const result = []
     for (const [ind, componentPath] of componentPaths.entries()) {
@@ -105,11 +107,10 @@ const getRenderedComponents = async (json, pageUrl, previousFolderName) => {
 const getParentComponents = async (contentPath) => {
     console.log('contentPath', contentPath)
     return getComponentPages(contentPath).then((pagePaths) => {
-        console.log('pagePaths-1', pagePaths)
         const result = pagePaths.map((pagePath) => {
             const fullPagePath = contentPath + pagePath
             return getComponentPages(fullPagePath).then((pagePaths) => {
-                console.log('pagePaths--2', pagePaths)
+                // console.log('pagePaths--2', pagePaths)
                 const innerresult = pagePaths.map((pagePath) => {
                     const pagePathList = fullPagePath + pagePath
                     console.log('pagePathList', pagePathList)
@@ -130,10 +131,43 @@ const getParentComponents = async (contentPath) => {
     })
 }
 
+const getAllComponentsFromFolderPath = async (contentPath) => {
+    const fullPagePath = contentPath + aemFolderName
+    return getComponentPages(fullPagePath).then((pagePaths) => {
+        const innerresult = pagePaths.map((pagePath) => {
+            const pagePathList = fullPagePath + pagePath
+            console.log('pagePathList', pagePathList)
+            const urlParts = pagePathList.split('/')
+            const previousFolderName = urlParts[urlParts.length - 2]
+            const camelCaseFolderName = previousFolderName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
+            const components = getData(utils.getJsonPath(pagePathList))
+                .then(core.getJson)
+                .then((json) => getRenderedComponents(json, pagePathList, camelCaseFolderName))
+
+            return components
+        })
+        return Promise.all(innerresult)
+    })
+}
+
+const getComponentsFromComponentPath = async (contentPath) => {
+    const pagePathList = contentPath + aemComponentName
+    console.log('pagePathList', pagePathList)
+    const urlParts = pagePathList.split('/')
+    // Get the second-to-last part
+    const previousFolderName = urlParts[urlParts.length - 2]
+    const camelCaseFolderName = previousFolderName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
+    const components = getData(utils.getJsonPath(pagePathList))
+        .then(core.getJson)
+        .then((json) => getRenderedComponents(json, pagePathList, camelCaseFolderName))
+
+    return components
+}
+
 const getAllComponents = async (contentPath) => {
-    console.log('contentPath', contentPath)
+    // console.log('contentPath', contentPath)
     return getComponentPages(contentPath).then((pagePaths) => {
-        console.log('pagePaths', pagePaths)
+        //    console.log('pagePaths', pagePaths)
         const result = pagePaths.map((pagePath) => {
             const fullPagePath = contentPath + pagePath
             const components = getData(utils.getJsonPath(fullPagePath))
@@ -275,7 +309,7 @@ const getPolicy = async (policyPath, policiesDir) => {
 }
 
 const getPolicies = async (policiesUrl) => {
-    console.log('policiesUrl', policiesUrl)
+    // console.log('policiesUrl', policiesUrl)
     return getData(utils.getJsonPath(policiesUrl))
         .then(core.getJson)
         .then((json) => {
@@ -293,6 +327,8 @@ const getPolicies = async (policiesUrl) => {
 exports.getResourcesImage = getResourcesImage
 exports.getAllComponents = getAllComponents
 exports.getParentComponents = getParentComponents
+exports.getAllComponentsFromFolderPath = getAllComponentsFromFolderPath
+exports.getComponentsFromComponentPath = getComponentsFromComponentPath
 exports.getResources = getResources
 exports.getPolicies = getPolicies
 exports.init = init
